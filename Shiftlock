@@ -1,0 +1,31 @@
+local player = game.Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera
+
+local function updateCharacterOrientation(character)
+    local cameraLookVector = camera.CFrame.LookVector
+    local newLookVector = Vector3.new(cameraLookVector.X, 0, cameraLookVector.Z).Unit
+    local characterPosition = character.PrimaryPart.Position
+    local targetPosition = characterPosition + newLookVector
+    character:SetPrimaryPartCFrame(CFrame.new(character.PrimaryPart.Position, targetPosition))
+end
+
+local function onRenderStep(character)
+    updateCharacterOrientation(character)
+end
+
+local function setupCharacter(character)
+    character:WaitForChild("Humanoid").Died:Connect(function()
+        character:Destroy() -- Удаление персонажа, чтобы не было старых экземпляров
+    end)
+
+    game:GetService("RunService").RenderStepped:Connect(function()
+        onRenderStep(character)
+    end)
+end
+
+player.CharacterAdded:Connect(setupCharacter)
+
+-- Запускаем для текущего персонажа, если он уже существует
+if player.Character then
+    setupCharacter(player.Character)
+end
